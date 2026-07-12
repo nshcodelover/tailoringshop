@@ -129,9 +129,15 @@ function initShaderProgram(gl, vs, fs) {
   return program;
 }
 
+// How long the page loader is visible before it fades, plus its own fade time —
+// the shader should only start once the loader is fully gone.
+const START_DELAY_MS = 1820;
 // How long the shader plays before fading out, and how long the fade takes.
 const INTRO_DURATION_MS = 3200;
 const FADE_DURATION_MS  = 900;
+// How opaque the shader is while it's playing (1 = fully hides the site behind it,
+// lower values let the site blend through underneath).
+const INTRO_OPACITY = 0.55;
 
 export default function ShaderBackground() {
   const canvasRef = useRef(null);
@@ -141,64 +147,72 @@ export default function ShaderBackground() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const gl = canvas.getContext('webgl');
-    if (!gl) { console.warn('WebGL not supported'); return; }
-
-    const program = initShaderProgram(gl, vsSource, fsSource);
-    if (!program) return;
-
-    const positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
-
-    const programInfo = {
-      attrib:  gl.getAttribLocation(program, 'aVertexPosition'),
-      uRes:    gl.getUniformLocation(program, 'iResolution'),
-      uTime:   gl.getUniformLocation(program, 'iTime'),
-    };
-
-    const resizeCanvas = () => {
-      canvas.width  = window.innerWidth;
-      canvas.height = window.innerHeight;
-      gl.viewport(0, 0, canvas.width, canvas.height);
-    };
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    const startTime = Date.now();
     let animId;
     let stopped = false;
-    const render = () => {
-      const t = (Date.now() - startTime) / 1000;
-      gl.clearColor(0, 0, 0, 1);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.useProgram(program);
-      gl.uniform2f(programInfo.uRes, canvas.width, canvas.height);
-      gl.uniform1f(programInfo.uTime, t);
-      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-      gl.vertexAttribPointer(programInfo.attrib, 2, gl.FLOAT, false, 0, 0);
-      gl.enableVertexAttribArray(programInfo.attrib);
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-      if (!stopped) animId = requestAnimationFrame(render);
-    };
-    animId = requestAnimationFrame(render);
+    let resizeCanvas = () => {};
+    let fadeTimer, stopTimer;
 
-    // Play once at the start: fade the canvas out, then fully stop rendering
-    // and remove it so no motion graphic remains after the intro.
-    canvas.style.transition = `opacity ${FADE_DURATION_MS}ms ease`;
-    const fadeTimer = setTimeout(() => {
-      canvas.style.opacity = '0';
-    }, INTRO_DURATION_MS);
-    const stopTimer = setTimeout(() => {
-      stopped = true;
-      cancelAnimationFrame(animId);
-      canvas.style.display = 'none';
-    }, INTRO_DURATION_MS + FADE_DURATION_MS);
+    const startTimer = setTimeout(() => {
+      const gl = canvas.getContext('webgl');
+      if (!gl) { console.warn('WebGL not supported'); return; }
+
+      const program = initShaderProgram(gl, vsSource, fsSource);
+      if (!program) return;
+
+      const positionBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+
+      const programInfo = {
+        attrib:  gl.getAttribLocation(program, 'aVertexPosition'),
+        uRes:    gl.getUniformLocation(program, 'iResolution'),
+        uTime:   gl.getUniformLocation(program, 'iTime'),
+      };
+
+      resizeCanvas = () => {
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
+        gl.viewport(0, 0, canvas.width, canvas.height);
+      };
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      const startTime = Date.now();
+      const render = () => {
+        const t = (Date.now() - startTime) / 1000;
+        gl.clearColor(0, 0, 0, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.useProgram(program);
+        gl.uniform2f(programInfo.uRes, canvas.width, canvas.height);
+        gl.uniform1f(programInfo.uTime, t);
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.vertexAttribPointer(programInfo.attrib, 2, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(programInfo.attrib);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        if (!stopped) animId = requestAnimationFrame(render);
+      };
+      animId = requestAnimationFrame(render);
+
+      // Reveal it now that the loader is done, play once, then fade out
+      // and fully stop rendering so no motion graphic remains after the intro.
+      canvas.style.transition = `opacity ${FADE_DURATION_MS}ms ease`;
+      canvas.style.opacity = String(INTRO_OPACITY);
+
+      fadeTimer = setTimeout(() => {
+        canvas.style.opacity = '0';
+      }, INTRO_DURATION_MS);
+      stopTimer = setTimeout(() => {
+        stopped = true;
+        cancelAnimationFrame(animId);
+        canvas.style.display = 'none';
+      }, INTRO_DURATION_MS + FADE_DURATION_MS);
+    }, START_DELAY_MS);
 
     return () => {
-      window.removeEventListener('resize', resizeCanvas);
+      clearTimeout(startTimer);
       clearTimeout(fadeTimer);
       clearTimeout(stopTimer);
+      window.removeEventListener('resize', resizeCanvas);
       cancelAnimationFrame(animId);
     };
   }, []);
@@ -210,10 +224,10 @@ export default function ShaderBackground() {
         position: 'fixed',
         top: 0, left: 0,
         width: '100%', height: '100%',
-        zIndex: -1,
+        zIndex: 999999,
         pointerEvents: 'none',
         display: 'block',
-        opacity: 1,
+        opacity: 0,
       }}
       aria-hidden="true"
     />
