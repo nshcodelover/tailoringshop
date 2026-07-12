@@ -8,7 +8,7 @@ html { scroll-behavior: smooth; font-size: 16px; direction: rtl; }
 
 body {
   font-family: var(--font-body);
-  background: transparent;
+  background:  var(--dark-bg);
   color: var(--text-white);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
