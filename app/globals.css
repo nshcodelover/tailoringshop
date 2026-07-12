@@ -206,29 +206,6 @@ body::before {
 @keyframes floatB { 0%,100% { transform:translateY(0) rotate(-15deg); } 40% { transform:translateY(-14px) rotate(-22deg); } 60% { transform:translateY(-9px) rotate(-10deg); } }
 @keyframes floatC { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-24px); } }
 
-/* Thread Motion */
-.thread-motion { position:absolute; inset:0; pointer-events:none; z-index:2; overflow:hidden; }
-.thread-svg { position:absolute; inset:0; width:100%; height:100%; }
-.thread-path { fill:none; stroke-dasharray:3500; stroke-dashoffset:3500; }
-#tGold   { animation:drawThread  8s cubic-bezier(.4,0,.2,1)  .5s  forwards; }
-#tPink   { animation:drawThread 11s cubic-bezier(.4,0,.2,1) 1.4s  forwards; }
-#tPurple { animation:drawThread 14s cubic-bezier(.4,0,.2,1) 2.2s  forwards; }
-#vineL   { animation:drawThread  7s cubic-bezier(.4,0,.2,1) 1.0s  forwards; }
-#vineR   { animation:drawThread  7s cubic-bezier(.4,0,.2,1) 1.5s  forwards; }
-@keyframes drawThread { to { stroke-dashoffset: 0; } }
-.stitch-border { fill:none; stroke:rgba(200,169,110,.18); stroke-width:1.2; stroke-dasharray:10 18; opacity:0; animation:fadeStitch 2s ease-out 10s forwards; }
-@keyframes fadeStitch { to { opacity:1; } }
-.e-petal { fill:none; stroke-linecap:round; stroke-linejoin:round; }
-.e-outer { stroke:rgba(200,169,110,.26); stroke-width:1.7; }
-.e-inner { stroke:rgba(255,107,157,.22); stroke-width:1.3; }
-.e-ring       { fill:none; stroke:rgba(200,169,110,.3);  stroke-width:1.6; }
-.e-ring-inner { fill:none; stroke:rgba(255,107,157,.22); stroke-width:1.3; }
-.e-dot { animation:dotPop .5s ease-out 8s both; }
-@keyframes dotPop { from { fill:rgba(200,169,110,0); r:0; } to { fill:rgba(200,169,110,.45); } }
-.e-leaf { fill:none; stroke:rgba(200,169,110,.24); stroke-width:1.2; stroke-linecap:round; stroke-linejoin:round; }
-.r-leaf { stroke:rgba(255,107,157,.2); }
-.e-corner { fill:none; stroke:rgba(200,169,110,.22); stroke-width:1.3; stroke-linecap:round; }
-
 /* Sparkles */
 .sparkles { position:absolute; inset:0; pointer-events:none; z-index:1; }
 .sparkle { position:absolute; background:var(--grad-gold); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; opacity:.4; animation:twinkle 3.5s ease-in-out infinite; }

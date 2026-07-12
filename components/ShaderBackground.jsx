@@ -129,6 +129,10 @@ function initShaderProgram(gl, vs, fs) {
   return program;
 }
 
+// How long the shader plays before fading out, and how long the fade takes.
+const INTRO_DURATION_MS = 3200;
+const FADE_DURATION_MS  = 900;
+
 export default function ShaderBackground() {
   const canvasRef = useRef(null);
 
@@ -163,6 +167,7 @@ export default function ShaderBackground() {
 
     const startTime = Date.now();
     let animId;
+    let stopped = false;
     const render = () => {
       const t = (Date.now() - startTime) / 1000;
       gl.clearColor(0, 0, 0, 1);
@@ -174,12 +179,26 @@ export default function ShaderBackground() {
       gl.vertexAttribPointer(programInfo.attrib, 2, gl.FLOAT, false, 0, 0);
       gl.enableVertexAttribArray(programInfo.attrib);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-      animId = requestAnimationFrame(render);
+      if (!stopped) animId = requestAnimationFrame(render);
     };
     animId = requestAnimationFrame(render);
 
+    // Play once at the start: fade the canvas out, then fully stop rendering
+    // and remove it so no motion graphic remains after the intro.
+    canvas.style.transition = `opacity ${FADE_DURATION_MS}ms ease`;
+    const fadeTimer = setTimeout(() => {
+      canvas.style.opacity = '0';
+    }, INTRO_DURATION_MS);
+    const stopTimer = setTimeout(() => {
+      stopped = true;
+      cancelAnimationFrame(animId);
+      canvas.style.display = 'none';
+    }, INTRO_DURATION_MS + FADE_DURATION_MS);
+
     return () => {
       window.removeEventListener('resize', resizeCanvas);
+      clearTimeout(fadeTimer);
+      clearTimeout(stopTimer);
       cancelAnimationFrame(animId);
     };
   }, []);
@@ -194,6 +213,7 @@ export default function ShaderBackground() {
         zIndex: -1,
         pointerEvents: 'none',
         display: 'block',
+        opacity: 1,
       }}
       aria-hidden="true"
     />

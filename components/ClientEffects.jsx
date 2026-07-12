@@ -4,27 +4,6 @@ import { useEffect } from 'react';
 export default function ClientEffects() {
   useEffect(() => {
 
-    /* ── Botanical Embroidery Motion ── */
-    function setupAnim(el, delay, dur) {
-      let len;
-      try {
-        len = el.tagName.toLowerCase() === 'circle'
-          ? 2 * Math.PI * parseFloat(el.getAttribute('r'))
-          : el.getTotalLength();
-      } catch(e) { len = 200; }
-      el.style.strokeDasharray  = len;
-      el.style.strokeDashoffset = len;
-      el.style.animation = `drawThread ${dur}s ease-out ${delay}s forwards`;
-    }
-    document.querySelectorAll('.thread-path').forEach(p => {
-      try { const l = p.getTotalLength(); p.style.strokeDasharray = l; p.style.strokeDashoffset = l; } catch(e) {}
-    });
-    document.querySelectorAll('.e-outer').forEach((p,i) => setupAnim(p, 3.5+i*0.18, 1.0));
-    document.querySelectorAll('.e-inner').forEach((p,i) => setupAnim(p, 5.5+i*0.14, 0.8));
-    document.querySelectorAll('.e-ring, .e-ring-inner').forEach((p,i) => setupAnim(p, 7.2+i*0.4, 1.2));
-    document.querySelectorAll('.e-leaf').forEach(p => setupAnim(p, parseFloat(p.dataset.delay||'4'), 0.9));
-    document.querySelectorAll('.e-corner').forEach(p => setupAnim(p, parseFloat(p.dataset.delay||'8.5'), 1.2));
-
     /* ── Page Loader ── */
     const loaderTimer = setTimeout(() => {
       const loader = document.getElementById('pageLoader');
